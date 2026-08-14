@@ -1,7 +1,8 @@
 from telegram import Bot
 import asyncio
+import os
 
-TOKEN = "8753108669:AAHH0qc5kZCjTnyhVvnhaNwDlGO1oapXEME"
+TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(token=TOKEN)
 

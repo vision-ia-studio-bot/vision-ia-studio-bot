@@ -1,4 +1,5 @@
 import os
+import requests
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -8,28 +9,57 @@ from telegram.ext import (
     filters,
 )
 
-TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+HF_TOKEN = os.getenv("HF_TOKEN")
+
+
+def ask_ai(prompt):
+    url = "https://api-inference.huggingface.co/models/Qwen/Qwen3-4B-Instruct-2507"
+
+    headers = {
+        "Authorization": f"Bearer {HF_TOKEN}"
+    }
+
+    payload = {
+        "inputs": prompt
+    }
+
+    response = requests.post(
+        url,
+        headers=headers,
+        json=payload,
+        timeout=60,
+    )
+
+    data = response.json()
+
+    if isinstance(data, list):
+        return data[0].get("generated_text", "Je n'ai pas pu générer de réponse.")
+
+    return "Le service d'IA est momentanément indisponible."
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Bonjour ! Je suis Vis Assistant. Envoyez-moi un message."
+        "Bonjour ! Je suis Vis Assistant. Posez-moi une question."
     )
 
 
 async def reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_message = update.message.text
+    question = update.message.text
 
-    await update.message.reply_text(
-        f"Vous avez écrit : {user_message}"
-    )
+    answer = ask_ai(question)
+
+    await update.message.reply_text(answer)
 
 
 def main():
-    app = Application.builder().token(TOKEN).build()
+    app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, reply))
+    app.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, reply)
+    )
 
     app.run_polling()
 

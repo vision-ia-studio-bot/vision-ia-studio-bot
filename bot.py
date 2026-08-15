@@ -1,6 +1,5 @@
 import os
 import requests
-from telegram import Update
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -8,6 +7,8 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
+
+memory = {}
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -61,20 +62,31 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    answer = ask_ai(update.message.text)
-    await update.message.reply_text(answer)
+    user_id = update.effective_user.id
+    message = update.message.text
 
+    if user_id not in memory:
+        memory[user_id] = []
 
-def main():
-    app = Application.builder().token(BOT_TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, reply)
+    memory[user_id].append(
+        {
+            "role": "user",
+            "content": message,
+        }
     )
 
-    app.run_polling()
+    answer = ask_ai(message)
 
+    memory[user_id].append(
+        {
+            "role": "assistant",
+            "content": answer,
+        }
+    )
+
+    memory[user_id] = memory[user_id][-10:]
+
+    await update.message.reply_text(answer)
 
 if __name__ == "__main__":
     main()

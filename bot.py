@@ -1,5 +1,6 @@
 import os
 import requests
+from telegram import Update
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -28,8 +29,8 @@ def ask_ai(message):
             {
                 "role": "system",
                 "content": (
-                    "Tu es Vis Assistant. Réponds dans la langue du message "
-                    "(français, anglais ou russe)."
+                    "Tu es Vis Assistant. Réponds en français, en anglais "
+                    "ou en russe selon la langue utilisée."
                 ),
             },
             {
@@ -68,25 +69,24 @@ async def reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id not in memory:
         memory[user_id] = []
 
-    memory[user_id].append(
-        {
-            "role": "user",
-            "content": message,
-        }
-    )
+    memory[user_id].append(message)
 
     answer = ask_ai(message)
 
-    memory[user_id].append(
-        {
-            "role": "assistant",
-            "content": answer,
-        }
+    await update.message.reply_text(answer)
+
+
+def main():
+    app = Application.builder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+
+    app.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, reply)
     )
 
-    memory[user_id] = memory[user_id][-10:]
+    app.run_polling()
 
-    await update.message.reply_text(answer)
 
 if __name__ == "__main__":
     main()

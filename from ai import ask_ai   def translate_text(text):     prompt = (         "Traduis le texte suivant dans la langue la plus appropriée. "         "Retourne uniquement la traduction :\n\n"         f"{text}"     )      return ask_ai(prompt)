@@ -1,0 +1,11 @@
+from ai import ask_ai
+
+
+def translate_text(text):
+    prompt = (
+        "Traduis le texte suivant dans la langue la plus appropriée. "
+        "Retourne uniquement la traduction :\n\n"
+        f"{text}"
+    )
+
+    return ask_ai(prompt)

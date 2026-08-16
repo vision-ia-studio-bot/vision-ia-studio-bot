@@ -1,4 +1,5 @@
 import os
+
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -10,6 +11,7 @@ from telegram.ext import (
 
 from ai import ask_ai
 from memory import save_message, get_history
+from internet import search_web
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -18,6 +20,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🤖 Bonjour ! Je suis Vis Assistant."
     )
+
+
+async def web_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = " ".join(context.args)
+
+    if not query:
+        await update.message.reply_text(
+            "Utilisation : /web votre recherche"
+        )
+        return
+
+    result = search_web(query)
+
+    await update.message.reply_text(result)
 
 
 async def reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -44,6 +60,7 @@ def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("web", web_search))
 
     app.add_handler(
         MessageHandler(

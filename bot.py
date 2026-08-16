@@ -13,6 +13,7 @@ from ai import ask_ai
 from memory import save_message, get_history
 from internet import search_web
 from pdf_reader import extract_text
+from stats import add_user, get_user_count
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -34,6 +35,8 @@ KEYWORDS = [
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    add_user(update.effective_user.id)
+
     await update.message.reply_text(
         "🤖 Bonjour ! Je suis Vis Assistant."
     )
@@ -47,14 +50,27 @@ async def help_command(
         "🤖 Vis Assistant\n\n"
         "Commandes disponibles :\n\n"
         "/start - Démarrer le bot\n"
-        "/web - Rechercher sur Internet\n"
-        "/help - Afficher cette aide\n\n"
+        "/help - Afficher cette aide\n"
+        "/stats - Voir le nombre d'utilisateurs\n"
+        "/web - Rechercher sur Internet\n\n"
         "📄 Envoyez un PDF pour obtenir un résumé.\n"
         "💬 Envoyez un message pour discuter avec l'IA."
     )
 
 
-async def web_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def stats_command(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    await update.message.reply_text(
+        f"👥 Nombre d'utilisateurs : {get_user_count()}"
+    )
+
+
+async def web_search(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
     query = " ".join(context.args)
 
     if not query:
@@ -112,6 +128,8 @@ async def reply(
     user_id = update.effective_user.id
     message = update.message.text
 
+    add_user(user_id)
+
     lower_message = message.lower()
 
     if any(word in lower_message for word in KEYWORDS):
@@ -142,6 +160,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("stats", stats_command))
     app.add_handler(CommandHandler("web", web_search))
 
     app.add_handler(

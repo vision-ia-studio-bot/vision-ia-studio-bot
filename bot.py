@@ -1,4 +1,5 @@
 import os
+import asyncio
 
 from telegram import Update
 from telegram.ext import (
@@ -9,11 +10,14 @@ from telegram.ext import (
     filters,
 )
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 from ai import ask_ai
 from memory import save_message, get_history
 from internet import search_web
 from pdf_reader import extract_text
 from stats import add_user, get_user_count
+from quotes import get_quote
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
@@ -33,6 +37,15 @@ KEYWORDS = [
     "date",
     "heure",
 ]
+
+
+async def publish_quote(app):
+    quote = get_quote()
+
+    await app.bot.send_message(
+        chat_id=CHANNEL_ID,
+        text=f"💡 Citation du jour\n\n{quote}",
+    )
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -181,6 +194,28 @@ async def reply(
 
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
+
+    scheduler = AsyncIOScheduler()
+
+    scheduler.add_job(
+        lambda: asyncio.create_task(
+            publish_quote(app)
+        ),
+        "cron",
+        hour=8,
+        minute=0,
+    )
+
+    scheduler.add_job(
+        lambda: asyncio.create_task(
+            publish_quote(app)
+        ),
+        "cron",
+        hour=20,
+        minute=0,
+    )
+
+    scheduler.start()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))

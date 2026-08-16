@@ -19,19 +19,26 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
 
 KEYWORDS = [
-    "aujourd",
     "actualité",
     "actu",
+    "aujourd",
     "récent",
-    "dernière",
+    "nouveau",
     "nouvelle",
-    "coupe du monde",
-    "gagné",
+    "dernier",
+    "dernière",
     "gagnant",
-    "mois",
-    "année",
-    "date",
-    "heure",
+    "vainqueur",
+    "champion",
+    "coupe",
+    "mondial",
+    "résultat",
+    "score",
+    "match",
+    "sport",
+    "président",
+    "élection",
+    "tournoi",
 ]
 
 

@@ -16,6 +16,7 @@ from pdf_reader import extract_text
 from stats import add_user, get_user_count
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHANNEL_ID = os.getenv("CHANNEL_ID")
 
 KEYWORDS = [
     "aujourd",
@@ -52,7 +53,8 @@ async def help_command(
         "/start - Démarrer le bot\n"
         "/help - Afficher cette aide\n"
         "/stats - Voir le nombre d'utilisateurs\n"
-        "/web - Rechercher sur Internet\n\n"
+        "/web - Rechercher sur Internet\n"
+        "/post - Publier un message dans le canal\n\n"
         "📄 Envoyez un PDF pour obtenir un résumé.\n"
         "💬 Envoyez un message pour discuter avec l'IA."
     )
@@ -64,6 +66,28 @@ async def stats_command(
 ):
     await update.message.reply_text(
         f"👥 Nombre d'utilisateurs : {get_user_count()}"
+    )
+
+
+async def post_command(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    message = " ".join(context.args)
+
+    if not message:
+        await update.message.reply_text(
+            "Utilisation : /post votre message"
+        )
+        return
+
+    await context.bot.send_message(
+        chat_id=CHANNEL_ID,
+        text=message,
+    )
+
+    await update.message.reply_text(
+        "✅ Message publié dans le canal."
     )
 
 
@@ -162,6 +186,7 @@ def main():
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("stats", stats_command))
     app.add_handler(CommandHandler("web", web_search))
+    app.add_handler(CommandHandler("post", post_command))
 
     app.add_handler(
         MessageHandler(

@@ -15,6 +15,22 @@ from internet import search_web
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+KEYWORDS = [
+    "aujourd",
+    "actualité",
+    "actu",
+    "récent",
+    "dernière",
+    "nouvelle",
+    "coupe du monde",
+    "gagné",
+    "gagnant",
+    "mois",
+    "année",
+    "date",
+    "heure",
+]
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -42,6 +58,15 @@ async def reply(
 ):
     user_id = update.effective_user.id
     message = update.message.text
+
+    lower_message = message.lower()
+
+    if any(word in lower_message for word in KEYWORDS):
+        result = search_web(message)
+
+        if result != "Aucun résultat trouvé.":
+            await update.message.reply_text(result)
+            return
 
     save_message(user_id, "user", message)
 

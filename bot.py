@@ -39,6 +39,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def help_command(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    await update.message.reply_text(
+        "🤖 Vis Assistant\n\n"
+        "Commandes disponibles :\n\n"
+        "/start - Démarrer le bot\n"
+        "/web - Rechercher sur Internet\n"
+        "/help - Afficher cette aide\n\n"
+        "📄 Envoyez un PDF pour obtenir un résumé.\n"
+        "💬 Envoyez un message pour discuter avec l'IA."
+    )
+
+
 async def web_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = " ".join(context.args)
 
@@ -126,6 +141,7 @@ def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("web", web_search))
 
     app.add_handler(

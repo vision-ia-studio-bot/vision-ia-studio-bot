@@ -51,7 +51,7 @@ async def create_image(
 
     image_url = generate_image(prompt)
 
-    await update.message.reply_photo(image=image_url)
+    await update.message.reply_photo(photo=image_url)
 
 
 async def reply(

@@ -12,6 +12,7 @@ from telegram.ext import (
 from ai import ask_ai
 from memory import save_message, get_history
 from internet import search_web
+from pdf_reader import extract_text
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -52,6 +53,36 @@ async def web_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(result)
 
 
+async def handle_pdf(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    document = update.message.document
+
+    if not document:
+        return
+
+    file = await document.get_file()
+
+    pdf_path = f"/tmp/{document.file_name}"
+
+    await file.download_to_drive(pdf_path)
+
+    text = extract_text(pdf_path)
+
+    if not text:
+        await update.message.reply_text(
+            "Impossible de lire ce document."
+        )
+        return
+
+    summary = ask_ai(
+        f"Résume le document suivant :\n\n{text[:5000]}"
+    )
+
+    await update.message.reply_text(summary)
+
+
 async def reply(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -89,6 +120,13 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("web", web_search))
+
+    app.add_handler(
+        MessageHandler(
+            filters.Document.PDF,
+            handle_pdf,
+        )
+    )
 
     app.add_handler(
         MessageHandler(

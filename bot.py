@@ -13,7 +13,6 @@ from ai import ask_ai
 from memory import save_message, get_history
 from internet import search_web
 from pdf_reader import extract_text
-from translator import translate_text
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -52,23 +51,6 @@ async def web_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     result = search_web(query)
 
     await update.message.reply_text(result)
-
-
-async def translate(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-):
-    text = " ".join(context.args)
-
-    if not text:
-        await update.message.reply_text(
-            "Utilisation : /translate votre texte"
-        )
-        return
-
-    translation = translate_text(text)
-
-    await update.message.reply_text(translation)
 
 
 async def handle_pdf(
@@ -145,7 +127,6 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("web", web_search))
-    app.add_handler(CommandHandler("translate", translate))
 
     app.add_handler(
         MessageHandler(

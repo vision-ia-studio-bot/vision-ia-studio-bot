@@ -42,7 +42,10 @@ KEYWORDS = [
 ]
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
     add_user(update.effective_user.id)
 
     await update.message.reply_text(
@@ -58,10 +61,10 @@ async def help_command(
         "🤖 Vis Assistant\n\n"
         "Commandes disponibles :\n\n"
         "/start - Démarrer le bot\n"
-        "/help - Afficher cette aide\n"
+        "/help - Afficher l'aide\n"
         "/stats - Voir le nombre d'utilisateurs\n"
         "/web - Rechercher sur Internet\n"
-        "/post - Publier un message dans le canal\n\n"
+        "/post - Publier dans le canal\n\n"
         "📄 Envoyez un PDF pour obtenir un résumé.\n"
         "💬 Envoyez un message pour discuter avec l'IA."
     )
@@ -88,13 +91,19 @@ async def post_command(
         )
         return
 
+    if not CHANNEL_ID:
+        await update.message.reply_text(
+            "CHANNEL_ID est introuvable."
+        )
+        return
+
     await context.bot.send_message(
         chat_id=CHANNEL_ID,
         text=message,
     )
 
     await update.message.reply_text(
-        "✅ Message publié dans le canal."
+        "✅ Message publié."
     )
 
 
@@ -111,6 +120,9 @@ async def web_search(
         return
 
     result = search_web(query)
+
+    if not result:
+        result = "Aucun résultat trouvé."
 
     await update.message.reply_text(result)
 
@@ -164,10 +176,25 @@ async def reply(
     lower_message = message.lower()
 
     if any(word in lower_message for word in KEYWORDS):
-        result = search_web(message)
+        articles = search_web(message)
 
-        if result != "Aucun résultat trouvé.":
-            await update.message.reply_text(result)
+        if articles:
+            prompt = f"""
+Réponds à la question en utilisant uniquement les informations ci-dessous.
+
+Question :
+{message}
+
+Articles :
+{articles}
+
+Donne une réponse courte, claire et précise.
+"""
+
+            answer = ask_ai(prompt)
+
+            await update.message.reply_text(answer)
+
             return
 
     save_message(user_id, "user", message)
@@ -189,11 +216,25 @@ async def reply(
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("stats", stats_command))
-    app.add_handler(CommandHandler("web", web_search))
-    app.add_handler(CommandHandler("post", post_command))
+    app.add_handler(
+        CommandHandler("start", start)
+    )
+
+    app.add_handler(
+        CommandHandler("help", help_command)
+    )
+
+    app.add_handler(
+        CommandHandler("stats", stats_command)
+    )
+
+    app.add_handler(
+        CommandHandler("web", web_search)
+    )
+
+    app.add_handler(
+        CommandHandler("post", post_command)
+    )
 
     app.add_handler(
         MessageHandler(

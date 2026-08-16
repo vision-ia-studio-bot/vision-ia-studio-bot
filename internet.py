@@ -6,35 +6,53 @@ GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
 
 def search_web(query):
     if not GNEWS_API_KEY:
-        return "❌ La variable GNEWS_API_KEY est introuvable."
+        return None
 
     try:
         response = requests.get(
             "https://gnews.io/api/v4/search",
             params={
                 "q": query,
-                "max": 1,
+                "max": 3,
                 "apikey": GNEWS_API_KEY,
             },
             timeout=10,
         )
 
-        data = response.json()
-
         if response.status_code != 200:
-            return f"❌ GNews : {data}"
+            return None
+
+        data = response.json()
 
         articles = data.get("articles", [])
 
         if not articles:
-            return "❌ Aucun résultat trouvé."
+            return None
 
-        article = articles[0]
+        results = []
 
-        return (
-            f"📰 {article.get('title', '')}\n\n"
-            f"{article.get('description', '')}"
-        )
+        for article in articles:
+            title = article.get("title", "")
+            description = article.get("description", "")
+            source = article.get(
+                "source",
+                {},
+            ).get(
+                "name",
+                "",
+            )
 
-    except Exception as e:
-        return f"❌ Erreur : {e}"
+            results.append(
+                f"""
+Titre : {title}
+
+Description : {description}
+
+Source : {source}
+"""
+            )
+
+        return "\n\n".join(results)
+
+    except Exception:
+        return None

@@ -19,8 +19,8 @@ Règles :
 
 - Réponds dans la langue utilisée par l'utilisateur.
 - Utilise le contexte de la conversation.
-- Si l'utilisateur pose une question sur la date, le mois, l'année, l'heure, un événement récent, une compétition sportive récente ou l'actualité, indique que l'utilisateur doit utiliser la commande /web.
-- N'invente jamais une date.
+- Si des informations récentes sont fournies dans le contexte, utilise-les.
+- N'invente jamais une date ou un événement récent.
 """
 
     headers = {
@@ -55,4 +55,6 @@ Règles :
         return data["choices"][0]["message"]["content"]
 
     except Exception:
-        return "Désolé, le service d'IA est momentanément indisponible."
+        return (
+            "Désolé, le service d'IA est momentanément indisponible."
+        )

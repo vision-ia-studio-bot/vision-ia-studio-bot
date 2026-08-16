@@ -13,6 +13,7 @@ from ai import ask_ai
 from memory import save_message, get_history
 from internet import search_web
 from pdf_reader import extract_text
+from translator import translate_text
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -53,6 +54,23 @@ async def web_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(result)
 
 
+async def translate(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    text = " ".join(context.args)
+
+    if not text:
+        await update.message.reply_text(
+            "Utilisation : /translate votre texte"
+        )
+        return
+
+    translation = translate_text(text)
+
+    await update.message.reply_text(translation)
+
+
 async def handle_pdf(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -62,11 +80,18 @@ async def handle_pdf(
     if not document:
         return
 
-    file = await document.get_file()
+    if not document.file_name.lower().endswith(".pdf"):
+        return
+
+    await update.message.reply_text(
+        "📄 PDF reçu. Analyse en cours..."
+    )
+
+    telegram_file = await document.get_file()
 
     pdf_path = f"/tmp/{document.file_name}"
 
-    await file.download_to_drive(pdf_path)
+    await telegram_file.download_to_drive(pdf_path)
 
     text = extract_text(pdf_path)
 
@@ -77,7 +102,7 @@ async def handle_pdf(
         return
 
     summary = ask_ai(
-        f"Résume le document suivant :\n\n{text[:5000]}"
+        f"Résume ce document :\n\n{text[:5000]}"
     )
 
     await update.message.reply_text(summary)
@@ -120,6 +145,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("web", web_search))
+    app.add_handler(CommandHandler("translate", translate))
 
     app.add_handler(
         MessageHandler(
